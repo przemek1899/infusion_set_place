@@ -13,9 +13,29 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.DatePicker;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.vcf.przemek.firstappsdk16.InfusionSetReader.InfusionSetEntry;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static final Map<String, String> myMap;
+    static {
+        // LEFT_ARM, RIGHT_ARM, LEFT_THIGH, RIGHT_THIGH, LEFT_BUTTOCK, RIGHT_BUTTOCK
+        Map<String, String> aMap = new HashMap<String, String>();
+        aMap.put("LEFT_THIGH", "Lewa noga");
+        aMap.put("RIGHT_THIGH", "Prawa noga");
+
+        aMap.put("LEFT_ARM", "Lewa ręka");
+        aMap.put("RIGHT_ARM", "Prawa ręka");
+
+        aMap.put("LEFT_BUTTOCK", "Lewy pośladek");
+        aMap.put("RIGHT_BUTTOCK", "Prawy pośladek");
+        myMap = Collections.unmodifiableMap(aMap);
+    }
 
     private DatePicker datePicker;
     private Calendar calendar;
@@ -51,7 +71,8 @@ public class MainActivity extends AppCompatActivity {
         builder.setItems(infusion_places, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                // the user clicked on colors[which]
+                // the user clicked on infusion_places[which]
+                insertInfusionSet(infusion_places[which].toString(), new Date(), false);
             }
         });
         builder.show();
@@ -67,6 +88,15 @@ public class MainActivity extends AppCompatActivity {
                 }
             };
 
+    public String getStringBoolean(Boolean value){
+        if (value == true){
+            return "1";
+        }
+        else{
+            return "0";
+        }
+    }
+
     public void insertInfusionSet(String place, Date creation_date, boolean not_working){
 
         InfusionSetDatabase dbHelper = new InfusionSetDatabase(getContext());
@@ -76,11 +106,12 @@ public class MainActivity extends AppCompatActivity {
 
         // Create a new map of values, where column names are the keys
         ContentValues values = new ContentValues();
-        values.put(FeedEntry.COLUMN_NAME_TITLE, title);
-        values.put(FeedEntry.COLUMN_NAME_SUBTITLE, subtitle);
+        values.put(InfusionSetEntry.COLUMN_NAME_PLACE, place);
+        values.put(InfusionSetEntry.COLUMN_NAME_CREATION_DATE, creation_date.toString());
+        values.put(InfusionSetEntry.COLUMN_NAME_NOT_WORKING, getStringBoolean(not_working));
 
         // Insert the new row, returning the primary key value of the new row
-        long newRowId = db.insert(FeedEntry.TABLE_NAME, null, values);
+        long newRowId = db.insert(InfusionSetEntry.TABLE_NAME, null, values);
     }
 }
 
