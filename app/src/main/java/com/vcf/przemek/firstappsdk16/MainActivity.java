@@ -4,6 +4,7 @@ import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
@@ -11,7 +12,11 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.DatePicker;
+import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
+
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -45,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
     CharSequence infusion_places[] = new CharSequence[] {"Lewa noga", "Prawa noga", "Lewa ręka",
             "Prawa ręka", "Lewy pośladek", "Prawy pośladek"};
 
+    String testArray[] = new String[] {"Lewa noga 10-12", "Lewa ręka 13-02", "Lewy pośladek 16-2"};
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,15 +64,22 @@ public class MainActivity extends AppCompatActivity {
         day = calendar.get(Calendar.DAY_OF_MONTH);
     }
 
+    public void initInfusionSetListView(){
+        //        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+//                android.R.layout.simple_list_item_1, testArray);
+
+        String[] fromColumns = {InfusionSetEntry.COLUMN_NAME_PLACE,
+                InfusionSetEntry.COLUMN_NAME_CREATION_DATE};
+        int[] toViews = {R.id.display_name, R.id.phone_number};
+
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(this,
+                R.layout.person_name_and_number, cursor, fromColumns, toViews, 0);
+
+        ListView listView = (ListView) findViewById(android.R.id.list);
+        listView.setAdapter(adapter);
+    }
+
     public void addInfusionSetDialog(View view){
-//        Intent intent = new Intent(this, AddInfusionSet.class);
-//        EditText editText = (EditText) findViewById(R.id.edit_message);
-//        String message = editText.getText().toString();
-//        intent.putExtra(EXTRA_MESSAGE, message);
-//        startActivity(intent);
-
-
-
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Miejsce wkucia");
         builder.setItems(infusion_places, new DialogInterface.OnClickListener() {
@@ -99,7 +113,8 @@ public class MainActivity extends AppCompatActivity {
 
     public void insertInfusionSet(String place, Date creation_date, boolean not_working){
 
-        InfusionSetDatabase dbHelper = new InfusionSetDatabase(getContext());
+//        InfusionSetDatabase dbHelper = new InfusionSetDatabase(getContext());
+        InfusionSetDatabase dbHelper = new InfusionSetDatabase(getApplicationContext());
 
         // Gets the data repository in write mode
         SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -115,12 +130,10 @@ public class MainActivity extends AppCompatActivity {
     }
 }
 
-public class InfusionSetDateDialog extends DialogFragment {
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-
-        return new DatePickerDialog(this, myDateListener, year, month, day);
-
-        //return builder.create();
-    }
-}
+//public class InfusionSetDateDialog extends DialogFragment {
+//    @Override
+//    public Dialog onCreateDialog(Bundle savedInstanceState) {
+//
+//        return new DatePickerDialog(this, myDateListener, year, month, day);
+//    }
+//}
