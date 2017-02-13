@@ -7,6 +7,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -70,10 +71,12 @@ public class MainActivity extends AppCompatActivity {
 
         String[] fromColumns = {InfusionSetEntry.COLUMN_NAME_PLACE,
                 InfusionSetEntry.COLUMN_NAME_CREATION_DATE};
-        int[] toViews = {R.id.display_name, R.id.phone_number};
+        int[] toViews = {R.id.place_entry, R.id.date_entry};
+
+        Cursor cursor = getCursorForLayout();
 
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(this,
-                R.layout.person_name_and_number, cursor, fromColumns, toViews, 0);
+                R.layout.infusion_set_entry, cursor, fromColumns, toViews, 0);
 
         ListView listView = (ListView) findViewById(android.R.id.list);
         listView.setAdapter(adapter);
@@ -127,6 +130,38 @@ public class MainActivity extends AppCompatActivity {
 
         // Insert the new row, returning the primary key value of the new row
         long newRowId = db.insert(InfusionSetEntry.TABLE_NAME, null, values);
+    }
+
+    public Cursor getCursorForLayout(){
+
+        InfusionSetDatabase dbHelper = new InfusionSetDatabase(getApplicationContext());
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        // Define a projection that specifies which columns from the database you will actually use after this query.
+        String[] projection = {
+                InfusionSetEntry._ID,
+                InfusionSetEntry.COLUMN_NAME_PLACE,
+                InfusionSetEntry.COLUMN_NAME_CREATION_DATE
+        };
+
+        // Filter results WHERE "title" = 'My Title'
+//        String selection = FeedEntry.COLUMN_NAME_TITLE + " = ?";
+//        String[] selectionArgs = { "My Title" };
+
+        // How you want the results sorted in the resulting Cursor
+//        String sortOrder =
+//                FeedEntry.COLUMN_NAME_SUBTITLE + " DESC";
+
+        Cursor cursor = db.query(
+                InfusionSetEntry.TABLE_NAME,                     // The table to query
+                projection,                               // The columns to return
+                null, //selection,                                // The columns for the WHERE clause
+                null, //selectionArgs,                            // The values for the WHERE clause
+                null,                                     // don't group the rows
+                null,                                     // don't filter by row groups
+                null //sortOrder                                 // The sort order
+        );
+        return cursor;
     }
 }
 
