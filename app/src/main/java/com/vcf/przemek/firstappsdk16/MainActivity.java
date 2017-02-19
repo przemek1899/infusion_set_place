@@ -6,6 +6,7 @@ import android.app.DialogFragment;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -13,6 +14,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.DatePicker;
 import android.widget.ListView;
@@ -63,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
 
         month = calendar.get(Calendar.MONTH);
         day = calendar.get(Calendar.DAY_OF_MONTH);
+        initInfusionSetListView();
     }
 
     public void initInfusionSetListView(){
@@ -78,14 +81,46 @@ public class MainActivity extends AppCompatActivity {
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(this,
                 R.layout.infusion_set_entry, cursor, fromColumns, toViews, 0);
 
+        initInfusionSetListView(adapter);
+    }
+
+    public void initInfusionSetListView(SimpleCursorAdapter adapter){
         ListView listView = (ListView) findViewById(android.R.id.list);
         listView.setAdapter(adapter);
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> arg0, View arg1, int pos, long id) {
+                dialogOnItemLongClick();
+                /*
+                 return true from the onItemLongClick() - it means that the View that currently
+                 received the event is the true event receiver and the event should not be
+                 propagated to the other Views in the tree; when you return false -
+                 you let the event be passed to the other Views that may consume it
+                 */
+                return true;
+            }
+        });
+    }
+
+    public void dialogOnItemLongClick(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Usunąć pozycję?");
+        builder.setMessage("Na pewno chcesz usunąć wkłucie?");
+        builder.setPositiveButton("Tak", new OnClickListener(){
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // TODO
+                return;
+            }
+        });
+        builder.setNegativeButton("Nie", null);
+        builder.show();
     }
 
     public void addInfusionSetDialog(View view){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Miejsce wkucia");
-        builder.setItems(infusion_places, new DialogInterface.OnClickListener() {
+        builder.setItems(infusion_places, new OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // the user clicked on infusion_places[which]
@@ -116,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void insertInfusionSet(String place, Date creation_date, boolean not_working){
 
-//        InfusionSetDatabase dbHelper = new InfusionSetDatabase(getContext());
+//      InfusionSetDatabase dbHelper = new InfusionSetDatabase(getContext());
         InfusionSetDatabase dbHelper = new InfusionSetDatabase(getApplicationContext());
 
         // Gets the data repository in write mode
@@ -130,6 +165,16 @@ public class MainActivity extends AppCompatActivity {
 
         // Insert the new row, returning the primary key value of the new row
         long newRowId = db.insert(InfusionSetEntry.TABLE_NAME, null, values);
+    }
+
+    public void deleteInfusionSet(Integer row_id){
+
+        InfusionSetDatabase dbHelper = new InfusionSetDatabase(getApplicationContext());
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        // Define 'where' part of query.
+        String selection = InfusionSetEntry._ID + " = ?";
+        db.delete(InfusionSetEntry.TABLE_NAME, selection, new String[]{Integer.toString(row_id)});
     }
 
     public Cursor getCursorForLayout(){
@@ -149,8 +194,7 @@ public class MainActivity extends AppCompatActivity {
 //        String[] selectionArgs = { "My Title" };
 
         // How you want the results sorted in the resulting Cursor
-//        String sortOrder =
-//                FeedEntry.COLUMN_NAME_SUBTITLE + " DESC";
+        String sortOrder = InfusionSetEntry.COLUMN_NAME_CREATION_DATE + " DESC";
 
         Cursor cursor = db.query(
                 InfusionSetEntry.TABLE_NAME,                     // The table to query
@@ -159,7 +203,7 @@ public class MainActivity extends AppCompatActivity {
                 null, //selectionArgs,                            // The values for the WHERE clause
                 null,                                     // don't group the rows
                 null,                                     // don't filter by row groups
-                null //sortOrder                                 // The sort order
+                sortOrder                                 // The sort order
         );
         return cursor;
     }
