@@ -177,6 +177,45 @@ public class MainActivity extends AppCompatActivity {
         db.delete(InfusionSetEntry.TABLE_NAME, selection, new String[]{Integer.toString(row_id)});
     }
 
+    public Cursor getCursorForLastInfusionSet(){
+        InfusionSetDatabase dbHelper = new InfusionSetDatabase(getApplicationContext());
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        // Define a projection that specifies which columns from the database you will actually use after this query.
+        String[] projection = {
+                InfusionSetEntry._ID,
+                InfusionSetEntry.COLUMN_NAME_PLACE,
+                InfusionSetEntry.COLUMN_NAME_CREATION_DATE
+        };
+
+        // Filter results WHERE "title" = 'My Title'
+//        String selection = FeedEntry.COLUMN_NAME_TITLE + " = ?";
+//        String[] selectionArgs = { "My Title" };
+
+        // How you want the results sorted in the resulting Cursor
+        String sortOrder = InfusionSetEntry.COLUMN_NAME_CREATION_DATE + " DESC";
+        String limit = "10";
+
+        Cursor cursor = db.query(
+                InfusionSetEntry.TABLE_NAME,                     // The table to query
+                projection,                               // The columns to return
+                null, //selection,                                // The columns for the WHERE clause
+                null, //selectionArgs,                            // The values for the WHERE clause
+                null,                                     // don't group the rows
+                null,                                     // don't filter by row groups
+                sortOrder,                                 // The sort order
+                limit
+        );
+        return cursor;
+    }
+
+    public String getNextInfusionSetPlace(){
+        Cursor last_places = getCursorForLastInfusionSet();
+
+        // TODO
+        return "Nothing";
+    }
+
     public Cursor getCursorForLayout(){
 
         InfusionSetDatabase dbHelper = new InfusionSetDatabase(getApplicationContext());
