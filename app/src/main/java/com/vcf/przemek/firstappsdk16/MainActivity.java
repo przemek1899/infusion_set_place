@@ -185,7 +185,8 @@ public class MainActivity extends AppCompatActivity {
         String[] projection = {
                 InfusionSetEntry._ID,
                 InfusionSetEntry.COLUMN_NAME_PLACE,
-                InfusionSetEntry.COLUMN_NAME_CREATION_DATE
+                InfusionSetEntry.COLUMN_NAME_CREATION_DATE,
+                InfusionSetEntry.COLUMN_NAME_NOT_WORKING
         };
 
         // Filter results WHERE "title" = 'My Title'
@@ -207,10 +208,22 @@ public class MainActivity extends AppCompatActivity {
                 limit
         );
         return cursor;
+        // remember about closing the cursor
     }
 
     public String getNextInfusionSetPlace(){
-        Cursor last_places = getCursorForLastInfusionSet();
+        Cursor c = getCursorForLastInfusionSet();
+
+        if (c != null ) {
+            if  (c.moveToFirst()) {
+                do {
+                    String place = c.getString(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_PLACE));
+                    String is_working = c.getString(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_NOT_WORKING));
+//                    int age = c.getInt(c.getColumnIndex("Age"));
+                }while (c.moveToNext());
+            }
+        }
+        c.close();
 
         // TODO
         return "Nothing";
