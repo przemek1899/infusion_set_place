@@ -13,12 +13,13 @@ import android.widget.TextView;
  * Created by Przemek on 2017-02-19.
  */
 
-public class CustomAdapter extends ArrayAdapter<String> {
+public class CustomAdapter extends ArrayAdapter<InfusionSetPlace> {
 
     private final Context context;
-    private final String[] values;
+//    private final String[] values;
+    private final InfusionSetPlace[] values;
 
-    public CustomAdapter(Context context, String[] values) {
+    public CustomAdapter(Context context, InfusionSetPlace[] values) {
         super(context, -1, values);
         this.context = context;
         this.values = values;
@@ -30,19 +31,14 @@ public class CustomAdapter extends ArrayAdapter<String> {
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         View rowView = inflater.inflate(R.layout.infusion_set_entry, parent, false);
-        TextView textView = (TextView) rowView.findViewById(R.id.place_entry);
-        textView.setText(values[position]);
 
-//        rowView.setTag();
+        TextView placeView = (TextView) rowView.findViewById(R.id.place_entry);
+        placeView.setText(values[position].getPlace() + "asd");
 
-        // change the icon for Windows and iPhone
-//        String s = values[position];
-//        if (s.startsWith("iPhone")) {
-//            imageView.setImageResource(R.drawable.no);
-//        } else {
-//            imageView.setImageResource(R.drawable.ok);
-//        }
+        TextView dateView = (TextView) rowView.findViewById(R.id.date_entry);
+        dateView.setText(values[position].getDate_str());
 
+        rowView.setTag(values[position].getID());
         return rowView;
     }
 

@@ -16,14 +16,17 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.DatePicker;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.vcf.przemek.firstappsdk16.InfusionSetReader.InfusionSetEntry;
@@ -65,7 +68,17 @@ public class MainActivity extends AppCompatActivity {
 
         month = calendar.get(Calendar.MONTH);
         day = calendar.get(Calendar.DAY_OF_MONTH);
-        initInfusionSetListView();
+//        initInfusionSetListView();
+        initListViewWithCustomAdapter();
+    }
+
+    public void initListViewWithCustomAdapter(){
+        Cursor c = getCursorForLayout();
+        List<InfusionSetPlace> list = mapEntriesFromDB(c);
+        InfusionSetPlace[] array = list.toArray(new InfusionSetPlace[list.size()]);
+        c.close();
+        CustomAdapter adapter = new CustomAdapter(this, array);
+        initInfusionSetListView(adapter);
     }
 
     public void initInfusionSetListView(){
@@ -84,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
         initInfusionSetListView(adapter);
     }
 
-    public void initInfusionSetListView(SimpleCursorAdapter adapter){
+    public void initInfusionSetListView(BaseAdapter adapter){
         ListView listView = (ListView) findViewById(android.R.id.list);
         listView.setAdapter(adapter);
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
@@ -229,23 +242,34 @@ public class MainActivity extends AppCompatActivity {
         return "Nothing";
     }
 
+    public List<InfusionSetPlace> mapEntriesFromDB(Cursor c){
+        List<InfusionSetPlace> list = new ArrayList<InfusionSetPlace>();
+        if (c != null ) {
+            if  (c.moveToFirst()) {
+                do {
+                    String place = c.getString(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_PLACE));
+//                    String not_working_str = c.getString(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_NOT_WORKING));
+                    String date_str = c.getString(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_CREATION_DATE));
+                    int id = c.getInt(c.getColumnIndex(InfusionSetEntry._ID));
+//                    boolean not_working = not_working_str.toLowerCase().equals("true");
+                    list.add(new InfusionSetPlace(id, place, null, date_str, false));
+                }while (c.moveToNext());
+            }
+        }
+        return list;
+    }
+
     public Cursor getCursorForLayout(){
 
         InfusionSetDatabase dbHelper = new InfusionSetDatabase(getApplicationContext());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        // Define a projection that specifies which columns from the database you will actually use after this query.
         String[] projection = {
                 InfusionSetEntry._ID,
                 InfusionSetEntry.COLUMN_NAME_PLACE,
                 InfusionSetEntry.COLUMN_NAME_CREATION_DATE
         };
 
-        // Filter results WHERE "title" = 'My Title'
-//        String selection = FeedEntry.COLUMN_NAME_TITLE + " = ?";
-//        String[] selectionArgs = { "My Title" };
-
-        // How you want the results sorted in the resulting Cursor
         String sortOrder = InfusionSetEntry.COLUMN_NAME_CREATION_DATE + " DESC";
 
         Cursor cursor = db.query(
