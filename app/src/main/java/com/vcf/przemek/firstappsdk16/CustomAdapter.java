@@ -33,7 +33,7 @@ public class CustomAdapter extends ArrayAdapter<InfusionSetPlace> {
         View rowView = inflater.inflate(R.layout.infusion_set_entry, parent, false);
 
         TextView placeView = (TextView) rowView.findViewById(R.id.place_entry);
-        placeView.setText(values[position].getPlace() + "asd");
+        placeView.setText(values[position].getPlace() + " " + Integer.toString(values[position].getID()));
 
         TextView dateView = (TextView) rowView.findViewById(R.id.date_entry);
         dateView.setText(values[position].getDate_str());

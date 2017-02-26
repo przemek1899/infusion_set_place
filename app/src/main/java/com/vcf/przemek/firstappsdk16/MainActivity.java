@@ -103,7 +103,12 @@ public class MainActivity extends AppCompatActivity {
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> arg0, View arg1, int pos, long id) {
-                dialogOnItemLongClick();
+                Object o = arg1.getTag();
+                Integer id_row = null;
+                if (o != null){
+                    id_row = (Integer) o;
+                }
+                dialogOnItemLongClick(id_row);
                 /*
                  return true from the onItemLongClick() - it means that the View that currently
                  received the event is the true event receiver and the event should not be
@@ -115,14 +120,16 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void dialogOnItemLongClick(){
+    public void dialogOnItemLongClick(final Integer id_row){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Usunąć pozycję?");
-        builder.setMessage("Na pewno chcesz usunąć wkłucie?");
+        builder.setMessage("Na pewno chcesz usunąć wkłucie?" + " " + id_row.toString());
         builder.setPositiveButton("Tak", new OnClickListener(){
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                deleteInfusionSet(id_row);
                 // TODO
+                // refresh view
                 return;
             }
         });
