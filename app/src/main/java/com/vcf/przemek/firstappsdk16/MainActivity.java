@@ -4,22 +4,25 @@ import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
-import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
+import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.DatePicker;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
+
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.appindexing.Thing;
+import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -34,6 +37,14 @@ import static com.vcf.przemek.firstappsdk16.InfusionSetReader.InfusionSetEntry;
 public class MainActivity extends AppCompatActivity {
 
     private static final Map<String, String> myMap;
+    private static final Calendar calendar = Calendar.getInstance();
+    private DatePicker datePicker;
+
+    private String selected_place = null;
+    private Integer selected_month = null;
+    private Integer selected_day = null;
+    private Integer selected_year = null;
+
     static {
         // LEFT_ARM, RIGHT_ARM, LEFT_THIGH, RIGHT_THIGH, LEFT_BUTTOCK, RIGHT_BUTTOCK
         Map<String, String> aMap = new HashMap<String, String>();
@@ -48,31 +59,28 @@ public class MainActivity extends AppCompatActivity {
         myMap = Collections.unmodifiableMap(aMap);
     }
 
-    private DatePicker datePicker;
-    private Calendar calendar;
-    private int year, month, day;
 
-
-    CharSequence infusion_places[] = new CharSequence[] {"Lewa noga", "Prawa noga", "Lewa ręka",
+    CharSequence infusion_places[] = new CharSequence[]{"Lewa noga", "Prawa noga", "Lewa ręka",
             "Prawa ręka", "Lewy pośladek", "Prawy pośladek"};
-
-    String testArray[] = new String[] {"Lewa noga 10-12", "Lewa ręka 13-02", "Lewy pośladek 16-2"};
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        calendar = Calendar.getInstance();
-        year = calendar.get(Calendar.YEAR);
-
-        month = calendar.get(Calendar.MONTH);
-        day = calendar.get(Calendar.DAY_OF_MONTH);
 //        initInfusionSetListView();
         initListViewWithCustomAdapter();
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
-    public void initListViewWithCustomAdapter(){
+    public void initListViewWithCustomAdapter() {
         Cursor c = getCursorForLayout();
         List<InfusionSetPlace> list = mapEntriesFromDB(c);
         InfusionSetPlace[] array = list.toArray(new InfusionSetPlace[list.size()]);
@@ -81,23 +89,7 @@ public class MainActivity extends AppCompatActivity {
         initInfusionSetListView(adapter);
     }
 
-    public void initInfusionSetListView(){
-        //        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-//                android.R.layout.simple_list_item_1, testArray);
-
-        String[] fromColumns = {InfusionSetEntry.COLUMN_NAME_PLACE,
-                InfusionSetEntry.COLUMN_NAME_CREATION_DATE};
-        int[] toViews = {R.id.place_entry, R.id.date_entry};
-
-        Cursor cursor = getCursorForLayout();
-
-        SimpleCursorAdapter adapter = new SimpleCursorAdapter(this,
-                R.layout.infusion_set_entry, cursor, fromColumns, toViews, 0);
-
-        initInfusionSetListView(adapter);
-    }
-
-    public void initInfusionSetListView(BaseAdapter adapter){
+    public void initInfusionSetListView(BaseAdapter adapter) {
         ListView listView = (ListView) findViewById(android.R.id.list);
         listView.setAdapter(adapter);
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
@@ -105,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
             public boolean onItemLongClick(AdapterView<?> arg0, View arg1, int pos, long id) {
                 Object o = arg1.getTag();
                 Integer id_row = null;
-                if (o != null){
+                if (o != null) {
                     id_row = (Integer) o;
                 }
                 dialogOnItemLongClick(id_row);
@@ -120,11 +112,11 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void dialogOnItemLongClick(final Integer id_row){
+    public void dialogOnItemLongClick(final Integer id_row) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Usunąć pozycję?");
         builder.setMessage("Na pewno chcesz usunąć wkłucie?" + " " + id_row.toString());
-        builder.setPositiveButton("Tak", new OnClickListener(){
+        builder.setPositiveButton("Tak", new OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 deleteInfusionSet(id_row);
@@ -137,39 +129,86 @@ public class MainActivity extends AppCompatActivity {
         builder.show();
     }
 
-    public void addInfusionSetDialog(View view){
+    public void addInfusionSetDialog(View view) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Miejsce wkucia");
         builder.setItems(infusion_places, new OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // the user clicked on infusion_places[which]
-                insertInfusionSet(infusion_places[which].toString(), new Date(), false);
+
+                selected_place = infusion_places[which].toString();
+                // tutaj powinno wywoływać nowy dialog
+                //showDatePickerDialog();
+                showDialog(999);
+                addInfousionSetConfirmDialog();
+                //insertInfusionSet(infusion_places[which].toString(), new Date(), false);
             }
         });
         builder.show();
     }
 
+    public void addInfousionSetConfirmDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Podsumowanie");
+
+        builder.setMessage("Miejsce: " + selected_place + "\nData: " + selected_day.toString() +
+                "-" + selected_month.toString());
+        builder.setPositiveButton("Tak", new OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                insertInfusionSet();
+                //insertInfusionSet(infusion_places[which].toString(), new Date(), false);
+            }
+        });
+        builder.setNegativeButton("Nie", null);
+        builder.show();
+    }
+
+    @Override
+    protected Dialog onCreateDialog(int id) {
+        // TODO Auto-generated method stub
+        if (id == 999) {
+            return new DatePickerDialog(this,
+                    myDateListener, selected_year, selected_month, selected_day);
+        }
+        return null;
+    }
+
     private DatePickerDialog.OnDateSetListener myDateListener = new
             DatePickerDialog.OnDateSetListener() {
                 @Override
-                public void onDateSet(DatePicker arg0,
-                                      int arg1, int arg2, int arg3) {
-                    // TODO Auto-generated method stub
+                public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
 
+                    selected_day = dayOfMonth;
+                    selected_month = month;
+                    selected_year = year;
+                    addInfousionSetConfirmDialog();
                 }
             };
 
-    public String getStringBoolean(Boolean value){
-        if (value == true){
+    public String getStringBoolean(Boolean value) {
+        if (value == true) {
             return "1";
-        }
-        else{
+        } else {
             return "0";
         }
     }
 
-    public void insertInfusionSet(String place, Date creation_date, boolean not_working){
+    public void insertInfusionSet() {
+
+        calendar.clear();
+        calendar.set(Calendar.DAY_OF_MONTH, selected_day);
+        calendar.set(Calendar.MONTH, selected_month);
+        calendar.set(Calendar.YEAR, selected_year);
+        Date creationDate = calendar.getTime();
+
+        // TODO not_working
+        boolean not_working = false;
+        insertInfusionSet(selected_place, creationDate, not_working);
+    }
+
+    public void insertInfusionSet(String place, Date creation_date, boolean not_working) {
 
 //      InfusionSetDatabase dbHelper = new InfusionSetDatabase(getContext());
         InfusionSetDatabase dbHelper = new InfusionSetDatabase(getApplicationContext());
@@ -180,14 +219,14 @@ public class MainActivity extends AppCompatActivity {
         // Create a new map of values, where column names are the keys
         ContentValues values = new ContentValues();
         values.put(InfusionSetEntry.COLUMN_NAME_PLACE, place);
-        values.put(InfusionSetEntry.COLUMN_NAME_CREATION_DATE, creation_date.toString());
+        values.put(InfusionSetEntry.COLUMN_NAME_CREATION_DATE, creation_date.getTime());
         values.put(InfusionSetEntry.COLUMN_NAME_NOT_WORKING, getStringBoolean(not_working));
 
         // Insert the new row, returning the primary key value of the new row
         long newRowId = db.insert(InfusionSetEntry.TABLE_NAME, null, values);
     }
 
-    public void deleteInfusionSet(Integer row_id){
+    public void deleteInfusionSet(Integer row_id) {
 
         InfusionSetDatabase dbHelper = new InfusionSetDatabase(getApplicationContext());
         SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -197,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
         db.delete(InfusionSetEntry.TABLE_NAME, selection, new String[]{Integer.toString(row_id)});
     }
 
-    public Cursor getCursorForLastInfusionSet(){
+    public Cursor getCursorForLastInfusionSet() {
         InfusionSetDatabase dbHelper = new InfusionSetDatabase(getApplicationContext());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
@@ -231,42 +270,43 @@ public class MainActivity extends AppCompatActivity {
         // remember about closing the cursor
     }
 
-    public String getNextInfusionSetPlace(){
+    public String getNextInfusionSetPlace() {
         Cursor c = getCursorForLastInfusionSet();
 
-        if (c != null ) {
-            if  (c.moveToFirst()) {
+        if (c != null) {
+            if (c.moveToFirst()) {
                 do {
                     String place = c.getString(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_PLACE));
                     String is_working = c.getString(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_NOT_WORKING));
 //                    int age = c.getInt(c.getColumnIndex("Age"));
-                }while (c.moveToNext());
+                } while (c.moveToNext());
             }
         }
         c.close();
-
         // TODO
         return "Nothing";
     }
 
-    public List<InfusionSetPlace> mapEntriesFromDB(Cursor c){
+    public List<InfusionSetPlace> mapEntriesFromDB(Cursor c) {
         List<InfusionSetPlace> list = new ArrayList<InfusionSetPlace>();
-        if (c != null ) {
-            if  (c.moveToFirst()) {
+        if (c != null) {
+            if (c.moveToFirst()) {
                 do {
                     String place = c.getString(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_PLACE));
 //                    String not_working_str = c.getString(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_NOT_WORKING));
-                    String date_str = c.getString(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_CREATION_DATE));
+                    long longTime = c.getLong(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_CREATION_DATE));
+                    Date date = new Date(longTime);
+
                     int id = c.getInt(c.getColumnIndex(InfusionSetEntry._ID));
 //                    boolean not_working = not_working_str.toLowerCase().equals("true");
-                    list.add(new InfusionSetPlace(id, place, null, date_str, false));
-                }while (c.moveToNext());
+                    list.add(new InfusionSetPlace(id, place, date, false));
+                } while (c.moveToNext());
             }
         }
         return list;
     }
 
-    public Cursor getCursorForLayout(){
+    public Cursor getCursorForLayout() {
 
         InfusionSetDatabase dbHelper = new InfusionSetDatabase(getApplicationContext());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -290,6 +330,43 @@ public class MainActivity extends AppCompatActivity {
         );
         return cursor;
     }
+
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    public Action getIndexApiAction() {
+        Thing object = new Thing.Builder()
+                .setName("Main Page") // TODO: Define a title for the content shown.
+                // TODO: Make sure this auto-generated URL is correct.
+                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
+                .build();
+        return new Action.Builder(Action.TYPE_VIEW)
+                .setObject(object)
+                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
+                .build();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.connect();
+        AppIndex.AppIndexApi.start(client, getIndexApiAction());
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        AppIndex.AppIndexApi.end(client, getIndexApiAction());
+        client.disconnect();
+    }
+
 }
 
 //public class InfusionSetDateDialog extends DialogFragment {

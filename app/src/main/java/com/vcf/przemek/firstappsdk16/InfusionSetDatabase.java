@@ -17,7 +17,7 @@ public class InfusionSetDatabase extends SQLiteOpenHelper {
             "CREATE TABLE " + INFUSION_SET_TABLE_NAME + " (" +
                     InfusionSetReader.InfusionSetEntry._ID + " INTEGER PRIMARY KEY," +
                     InfusionSetReader.InfusionSetEntry.COLUMN_NAME_PLACE + " TEXT NOT NULL," +
-                    InfusionSetReader.InfusionSetEntry.COLUMN_NAME_CREATION_DATE + " DATE NOT NULL," +
+                    InfusionSetReader.InfusionSetEntry.COLUMN_NAME_CREATION_DATE + " INTEGER NOT NULL," +
                     InfusionSetReader.InfusionSetEntry.COLUMN_NAME_NOT_WORKING + " BOOLEAN);";
 
     InfusionSetDatabase(Context context) {
