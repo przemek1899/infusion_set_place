@@ -28,4 +28,16 @@
         android:id="@android:id/list"
         android:layout_alignParentTop="true"
         android:layout_marginTop="123dp"></ListView>
+
+    <Button
+        android:text="Refresh"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/button"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="19dp"
+        android:layout_marginEnd="19dp"
+        android:onClick="refreshView"
+        android:id="@+id/button2" />
 </RelativeLayout>

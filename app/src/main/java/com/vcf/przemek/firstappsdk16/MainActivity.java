@@ -3,6 +3,7 @@ package com.vcf.przemek.firstappsdk16;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.app.TimePickerDialog;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
@@ -12,12 +13,16 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.text.format.DateFormat;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.DatePicker;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.TextView;
+import android.widget.TimePicker;
 
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
@@ -30,6 +35,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static com.vcf.przemek.firstappsdk16.InfusionSetReader.InfusionSetEntry;
@@ -38,12 +44,14 @@ public class MainActivity extends AppCompatActivity {
 
     private static final Map<String, String> myMap;
     private static final Calendar calendar = Calendar.getInstance();
-    private DatePicker datePicker;
+    public java.text.DateFormat df = java.text.DateFormat.getDateInstance(java.text.DateFormat.SHORT, Locale.FRANCE);
 
     private String selected_place = null;
     private Integer selected_month = null;
     private Integer selected_day = null;
     private Integer selected_year = null;
+    private Integer selected_hour = null;
+    private Integer selected_minute = null;
 
     static {
         // LEFT_ARM, RIGHT_ARM, LEFT_THIGH, RIGHT_THIGH, LEFT_BUTTOCK, RIGHT_BUTTOCK
@@ -95,12 +103,19 @@ public class MainActivity extends AppCompatActivity {
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> arg0, View arg1, int pos, long id) {
+                View firstTextView = ((ViewGroup)arg1).getChildAt(0);
+                TextView placeTextView = (TextView) firstTextView;
+
+                View secondTextView = ((ViewGroup)arg1).getChildAt(1);
+                TextView dateTextView = (TextView) secondTextView;
+
+                String rowText = placeTextView.getText().toString() + " " + dateTextView.getText().toString();
                 Object o = arg1.getTag();
                 Integer id_row = null;
                 if (o != null) {
                     id_row = (Integer) o;
                 }
-                dialogOnItemLongClick(id_row);
+                dialogOnItemLongClick(id_row, rowText);
                 /*
                  return true from the onItemLongClick() - it means that the View that currently
                  received the event is the true event receiver and the event should not be
@@ -112,16 +127,19 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void dialogOnItemLongClick(final Integer id_row) {
+    public void refreshView(View v){
+        initListViewWithCustomAdapter();
+    }
+
+    public void dialogOnItemLongClick(final Integer id_row, String rowText) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Usunąć pozycję?");
-        builder.setMessage("Na pewno chcesz usunąć wkłucie?" + " " + id_row.toString());
+        builder.setMessage("Na pewno chcesz usunąć wkłucie:\n"+ rowText + "?");
         builder.setPositiveButton("Tak", new OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 deleteInfusionSet(id_row);
-                // TODO
-                // refresh view
+                initListViewWithCustomAdapter();
                 return;
             }
         });
@@ -139,53 +157,45 @@ public class MainActivity extends AppCompatActivity {
 
                 selected_place = infusion_places[which].toString();
                 // tutaj powinno wywoływać nowy dialog
-                //showDatePickerDialog();
-                showDialog(999);
-                addInfousionSetConfirmDialog();
+//                showDatePickerDialog();
+                showTimePickerDialog();
+                // addInfousionSetConfirmDialog();
                 //insertInfusionSet(infusion_places[which].toString(), new Date(), false);
             }
         });
         builder.show();
     }
 
+    public Date getSelectedDate(){
+        calendar.clear();
+        calendar.set(Calendar.DAY_OF_MONTH, selected_day);
+        calendar.set(Calendar.MONTH, selected_month);
+        calendar.set(Calendar.YEAR, selected_year);
+        calendar.set(Calendar.HOUR_OF_DAY, selected_hour);
+        calendar.set(Calendar.MINUTE, selected_minute);
+        return calendar.getTime();
+    }
+
     public void addInfousionSetConfirmDialog() {
+
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Podsumowanie");
 
-        builder.setMessage("Miejsce: " + selected_place + "\nData: " + selected_day.toString() +
-                "-" + selected_month.toString());
+        final Date creationDate = getSelectedDate();
+        String custom_date_string = df.format(creationDate);
+        builder.setMessage("Miejsce: " + selected_place + "  " + custom_date_string);
         builder.setPositiveButton("Tak", new OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                insertInfusionSet();
-                //insertInfusionSet(infusion_places[which].toString(), new Date(), false);
+                // TODO
+                boolean not_working = false;
+                insertInfusionSet(selected_place, creationDate, not_working);
+                initListViewWithCustomAdapter();
             }
         });
         builder.setNegativeButton("Nie", null);
         builder.show();
     }
-
-    @Override
-    protected Dialog onCreateDialog(int id) {
-        // TODO Auto-generated method stub
-        if (id == 999) {
-            return new DatePickerDialog(this,
-                    myDateListener, selected_year, selected_month, selected_day);
-        }
-        return null;
-    }
-
-    private DatePickerDialog.OnDateSetListener myDateListener = new
-            DatePickerDialog.OnDateSetListener() {
-                @Override
-                public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-
-                    selected_day = dayOfMonth;
-                    selected_month = month;
-                    selected_year = year;
-                    addInfousionSetConfirmDialog();
-                }
-            };
 
     public String getStringBoolean(Boolean value) {
         if (value == true) {
@@ -193,19 +203,6 @@ public class MainActivity extends AppCompatActivity {
         } else {
             return "0";
         }
-    }
-
-    public void insertInfusionSet() {
-
-        calendar.clear();
-        calendar.set(Calendar.DAY_OF_MONTH, selected_day);
-        calendar.set(Calendar.MONTH, selected_month);
-        calendar.set(Calendar.YEAR, selected_year);
-        Date creationDate = calendar.getTime();
-
-        // TODO not_working
-        boolean not_working = false;
-        insertInfusionSet(selected_place, creationDate, not_working);
     }
 
     public void insertInfusionSet(String place, Date creation_date, boolean not_working) {
@@ -367,12 +364,68 @@ public class MainActivity extends AppCompatActivity {
         client.disconnect();
     }
 
-}
+    public void showDatePickerDialog() {
+        DialogFragment newFragment = new DatePickerFragment();
+        newFragment.show(getFragmentManager(), "datePicker");
+    }
 
-//public class InfusionSetDateDialog extends DialogFragment {
-//    @Override
-//    public Dialog onCreateDialog(Bundle savedInstanceState) {
-//
-//        return new DatePickerDialog(this, myDateListener, year, month, day);
-//    }
-//}
+    public static class DatePickerFragment extends DialogFragment
+            implements DatePickerDialog.OnDateSetListener {
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // Use the current date as the default date in the picker
+            final Calendar c = Calendar.getInstance();
+            int year = c.get(Calendar.YEAR);
+            int month = c.get(Calendar.MONTH);
+            int day = c.get(Calendar.DAY_OF_MONTH);
+
+            // Create a new instance of DatePickerDialog and return it
+            return new DatePickerDialog(getActivity(), this, year, month, day);
+        }
+
+        public void onDateSet(DatePicker view, int year, int month, int day) {
+            MainActivity a = (MainActivity)getActivity();
+            a.setDate(year, month, day);
+            a.addInfousionSetConfirmDialog();
+        }
+    }
+
+    public void setDate(final int year, final int month, final int day){
+        selected_day = day;
+        selected_month = month;
+        selected_year = year;
+    }
+
+    public void setTime(final int hourOfDay, final int minute){
+        selected_hour = hourOfDay;
+        selected_minute = minute;
+    }
+
+    public static class TimePickerFragment extends DialogFragment
+            implements TimePickerDialog.OnTimeSetListener {
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // Use the current time as the default values for the picker
+            final Calendar c = Calendar.getInstance();
+            int hour = c.get(Calendar.HOUR_OF_DAY);
+            int minute = c.get(Calendar.MINUTE);
+
+            // Create a new instance of TimePickerDialog and return it
+            return new TimePickerDialog(getActivity(), this, hour, minute,
+                    DateFormat.is24HourFormat(getActivity()));
+        }
+
+        public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+            MainActivity a = (MainActivity)getActivity();
+            a.setTime(hourOfDay, minute);
+            a.showDatePickerDialog();
+        }
+    }
+
+    public void showTimePickerDialog() {
+        DialogFragment newFragment = new TimePickerFragment();
+        newFragment.show(getFragmentManager(), "timePicker");
+    }
+}
