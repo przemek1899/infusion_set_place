@@ -47,7 +47,9 @@ public class CustomAdapter extends ArrayAdapter<InfusionSetPlace> {
 //                    flags |= android.text.format.DateUtils.FORMAT_SHOW_YEAR;
 
         String finalDateTime = android.text.format.DateUtils.formatDateTime(context,
-                when + TimeZone.getDefault().getOffset(when), flags);
+                when + TimeZone.getTimeZone("Europe/Warsaw").getOffset(when), flags);
+//        TimeZone.getTimeZone("Europe/Warsaw")
+//        TimeZone.getDefault().getOffset(when)
 
         TextView dateView = (TextView) rowView.findViewById(R.id.date_entry);
         dateView.setText(finalDateTime);
