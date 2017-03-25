@@ -46,8 +46,8 @@ public class CustomAdapter extends ArrayAdapter<InfusionSetPlace> {
         flags |= android.text.format.DateUtils.FORMAT_ABBREV_MONTH;
 //                    flags |= android.text.format.DateUtils.FORMAT_SHOW_YEAR;
 
-        String finalDateTime = android.text.format.DateUtils.formatDateTime(context,
-                when + TimeZone.getTimeZone("Europe/Warsaw").getOffset(when), flags);
+        String finalDateTime = android.text.format.DateUtils.formatDateTime(context, when, flags);
+//                when + TimeZone.getTimeZone("Europe/Warsaw").getOffset(when), flags);
 //        TimeZone.getTimeZone("Europe/Warsaw")
 //        TimeZone.getDefault().getOffset(when)
 

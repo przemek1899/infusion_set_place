@@ -34,9 +34,11 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import static com.vcf.przemek.firstappsdk16.InfusionSetReader.InfusionSetEntry;
 
@@ -267,7 +269,35 @@ public class MainActivity extends AppCompatActivity {
         // remember about closing the cursor
     }
 
-    public String getNextInfusionSetPlace() {
+    public void showNextInfusionSetPlace(View v){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Miejsce następnego wkłucia");
+        List<CharSequence> available_places = getNextInfusionSetPlace();
+//        builder.setItems(available_places.toArray(), new OnClickListener() {
+//            @Override
+//            public void onClick(DialogInterface dialog, int which) {
+//                // do nothing
+//            }
+//        });
+        builder.setMessage(available_places.get(0));
+        builder.show();
+    }
+
+    public CharSequence findOnePlace(Set<String> used_places, CharSequence[] places){
+        for (CharSequence c : places){
+
+            if(!used_places.contains(c.toString())) {
+                return c;
+            }
+        }
+        return "No place found";
+    }
+
+    public List<CharSequence> getNextInfusionSetPlace() {
+
+        Set infusion_set = new HashSet<String>();
+        List<CharSequence> results = new ArrayList<CharSequence>();
+
         Cursor c = getCursorForLastInfusionSet();
 
         if (c != null) {
@@ -275,13 +305,18 @@ public class MainActivity extends AppCompatActivity {
                 do {
                     String place = c.getString(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_PLACE));
                     String is_working = c.getString(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_NOT_WORKING));
-//                    int age = c.getInt(c.getColumnIndex("Age"));
+                    infusion_set.add(place);
+                    if (infusion_set.size() >= infusion_places.length - 1){
+                        results.add(findOnePlace(infusion_set, infusion_places));
+                        return results;
+                    }
                 } while (c.moveToNext());
             }
         }
         c.close();
         // TODO
-        return "Nothing";
+        results.add("Nothing");
+        return results;
     }
 
     public List<InfusionSetPlace> mapEntriesFromDB(Cursor c) {
