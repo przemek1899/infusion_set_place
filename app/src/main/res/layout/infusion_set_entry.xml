@@ -9,6 +9,17 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:textSize="20dip" />
+
+    <ImageView
+        android:id="@+id/not_working_icon"
+        android:layout_width="40px"
+        android:layout_height="40px"
+        android:maxHeight="40px"
+        android:maxWidth="40px"
+        android:scaleType="centerInside"
+        android:visibility="invisible"
+        android:src="@drawable/delete_cross_icon" />
+
     <TextView
         android:id="@+id/date_entry"
         android:layout_width="match_parent"

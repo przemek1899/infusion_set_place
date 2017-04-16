@@ -13,14 +13,17 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.text.format.DateFormat;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.DatePicker;
 import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
@@ -28,6 +31,9 @@ import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.vcf.przemek.firstappsdk16.constants.DataPickerMode;
+import com.vcf.przemek.firstappsdk16.db.InfusionSetDatabase;
+import com.vcf.przemek.firstappsdk16.db.InsulinContainerReader;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -40,7 +46,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import static com.vcf.przemek.firstappsdk16.InfusionSetReader.InfusionSetEntry;
+import static com.vcf.przemek.firstappsdk16.db.InfusionSetReader.InfusionSetEntry;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -54,6 +60,8 @@ public class MainActivity extends AppCompatActivity {
     private Integer selected_year = null;
     private Integer selected_hour = null;
     private Integer selected_minute = null;
+
+    private DataPickerMode data_picker_mode = null;
 
     static {
         // LEFT_ARM, RIGHT_ARM, LEFT_THIGH, RIGHT_THIGH, LEFT_BUTTOCK, RIGHT_BUTTOCK
@@ -88,6 +96,9 @@ public class MainActivity extends AppCompatActivity {
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+
+        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        setSupportActionBar(myToolbar);
     }
 
     public void initListViewWithCustomAdapter() {
@@ -108,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
                 View firstTextView = ((ViewGroup)arg1).getChildAt(0);
                 TextView placeTextView = (TextView) firstTextView;
 
-                View secondTextView = ((ViewGroup)arg1).getChildAt(1);
+                View secondTextView = ((ViewGroup)arg1).getChildAt(2);
                 TextView dateTextView = (TextView) secondTextView;
 
                 String rowText = placeTextView.getText().toString() + " " + dateTextView.getText().toString();
@@ -133,7 +144,60 @@ public class MainActivity extends AppCompatActivity {
         initListViewWithCustomAdapter();
     }
 
-    public void dialogOnItemLongClick(final Integer id_row, String rowText) {
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.bar, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.reservoir_menu:
+                showInsulinReservoirDialog();
+                return true;
+
+            default:
+                // If we got here, the user's action was not recognized.
+                // Invoke the superclass to handle it.
+                return super.onOptionsItemSelected(item);
+
+        }
+    }
+
+    public void dialogOnItemLongClick(final Integer id_row, final String rowText){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.long_item_dialog_title) //R.string.pick_color
+                .setItems(R.array.long_item_dialog_options, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (which == 0){
+                            dialogOnDeleteInfusionSet(id_row, rowText);
+                        }
+                        else if (which == 1){
+                            markInfusionSetAsFailed(id_row);
+                        }
+                    }
+                });
+        builder.show();
+    }
+
+    public void markInfusionSetAsFailed(final Integer id_row){
+        InfusionSetDatabase dbHelper = new InfusionSetDatabase(getApplicationContext());
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        // content
+        ContentValues values = new ContentValues();
+        values.put(InfusionSetEntry.COLUMN_NAME_NOT_WORKING, getStringBoolean(true));
+
+        // Define 'where' part of query.
+        String selection = InfusionSetEntry._ID + " = ?";
+
+        db.update(InfusionSetEntry.TABLE_NAME, values, selection, new String[]{Integer.toString(id_row)});
+        initListViewWithCustomAdapter();
+    }
+
+    public void dialogOnDeleteInfusionSet(final Integer id_row, String rowText) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Usunąć pozycję?");
         builder.setMessage("Na pewno chcesz usunąć wkłucie:\n"+ rowText + "?");
@@ -160,6 +224,7 @@ public class MainActivity extends AppCompatActivity {
                 selected_place = infusion_places[which].toString();
                 // tutaj powinno wywoływać nowy dialog
 //                showDatePickerDialog();
+                data_picker_mode = DataPickerMode.ADD_INFUSION_SET;
                 showTimePickerDialog();
                 // addInfousionSetConfirmDialog();
                 //insertInfusionSet(infusion_places[which].toString(), new Date(), false);
@@ -176,6 +241,35 @@ public class MainActivity extends AppCompatActivity {
         calendar.set(Calendar.HOUR_OF_DAY, selected_hour);
         calendar.set(Calendar.MINUTE, selected_minute);
         return calendar.getTime();
+    }
+
+    public void onDataSetAction(){
+        if (data_picker_mode == DataPickerMode.ADD_INFUSION_SET){
+            addInfousionSetConfirmDialog();
+        }
+        else if (data_picker_mode == DataPickerMode.ADD_INSULIN_RESERVOIR){
+            addInsulinReservoirConfirmDialog();
+        }
+    }
+
+    public void addInsulinReservoirConfirmDialog(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Podsumowanie");
+
+        final Date creationDate = getSelectedDate();
+        String custom_date_string = df.format(creationDate);
+        builder.setMessage("Data wymiany zbiornika: " + custom_date_string);
+        builder.setPositiveButton("Tak", new OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+//                insertInfusionSet(creationDate);
+                insertInsulinReservoir(creationDate);
+                // maybe view history of insulin reservoir changes
+            }
+        });
+        builder.setNegativeButton("Nie", null);
+        builder.show();
     }
 
     public void addInfousionSetConfirmDialog() {
@@ -205,6 +299,17 @@ public class MainActivity extends AppCompatActivity {
         } else {
             return "0";
         }
+    }
+
+    public void insertInsulinReservoir(Date creation_date){
+        InfusionSetDatabase dbHelper = new InfusionSetDatabase(getApplicationContext());
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(InsulinContainerReader.InsulinContainerEntry.COLUMN_NAME_CREATION_DATE, creation_date.getTime());
+
+        // Insert the new row, returning the primary key value of the new row
+        long newRowId = db.insert(InsulinContainerReader.InsulinContainerEntry.TABLE_NAME, null, values);
     }
 
     public void insertInfusionSet(String place, Date creation_date, boolean not_working) {
@@ -304,7 +409,7 @@ public class MainActivity extends AppCompatActivity {
             if (c.moveToFirst()) {
                 do {
                     String place = c.getString(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_PLACE));
-                    String is_working = c.getString(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_NOT_WORKING));
+                    String not_working_str = c.getString(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_NOT_WORKING));
                     infusion_set.add(place);
                     if (infusion_set.size() >= infusion_places.length - 1){
                         results.add(findOnePlace(infusion_set, infusion_places));
@@ -325,13 +430,14 @@ public class MainActivity extends AppCompatActivity {
             if (c.moveToFirst()) {
                 do {
                     String place = c.getString(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_PLACE));
-//                    String not_working_str = c.getString(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_NOT_WORKING));
+                    Integer not_working_int = c.getInt(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_NOT_WORKING));
+
                     long longTime = c.getLong(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_CREATION_DATE));
                     Date date = new Date(longTime);
 
                     int id = c.getInt(c.getColumnIndex(InfusionSetEntry._ID));
-//                    boolean not_working = not_working_str.toLowerCase().equals("true");
-                    list.add(new InfusionSetPlace(id, place, date, false));
+                    boolean not_working = not_working_int.intValue() == 1;
+                    list.add(new InfusionSetPlace(id, place, date, not_working));
                 } while (c.moveToNext());
             }
         }
@@ -346,7 +452,8 @@ public class MainActivity extends AppCompatActivity {
         String[] projection = {
                 InfusionSetEntry._ID,
                 InfusionSetEntry.COLUMN_NAME_PLACE,
-                InfusionSetEntry.COLUMN_NAME_CREATION_DATE
+                InfusionSetEntry.COLUMN_NAME_CREATION_DATE,
+                InfusionSetEntry.COLUMN_NAME_NOT_WORKING
         };
 
         String sortOrder = InfusionSetEntry.COLUMN_NAME_CREATION_DATE + " DESC";
@@ -404,6 +511,11 @@ public class MainActivity extends AppCompatActivity {
         newFragment.show(getFragmentManager(), "datePicker");
     }
 
+    public void showInsulinReservoirDialog(){
+        data_picker_mode = DataPickerMode.ADD_INSULIN_RESERVOIR;
+        showTimePickerDialog();
+    }
+
     public static class DatePickerFragment extends DialogFragment
             implements DatePickerDialog.OnDateSetListener {
 
@@ -422,7 +534,8 @@ public class MainActivity extends AppCompatActivity {
         public void onDateSet(DatePicker view, int year, int month, int day) {
             MainActivity a = (MainActivity)getActivity();
             a.setDate(year, month, day);
-            a.addInfousionSetConfirmDialog();
+            // a.addInfousionSetConfirmDialog();
+            a.onDataSetAction();
         }
     }
 

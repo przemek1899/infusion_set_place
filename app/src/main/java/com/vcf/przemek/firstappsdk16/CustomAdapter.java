@@ -54,6 +54,11 @@ public class CustomAdapter extends ArrayAdapter<InfusionSetPlace> {
         TextView dateView = (TextView) rowView.findViewById(R.id.date_entry);
         dateView.setText(finalDateTime);
 
+        if (values[position].is_not_working()) {
+            ImageView imgView = (ImageView)rowView.findViewById(R.id.not_working_icon);
+            imgView.setVisibility(View.VISIBLE);
+        }
+
         rowView.setTag(values[position].getID());
         return rowView;
     }

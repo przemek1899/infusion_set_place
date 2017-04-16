@@ -1,4 +1,4 @@
-package com.vcf.przemek.firstappsdk16;
+package com.vcf.przemek.firstappsdk16.db;
 
 import android.provider.BaseColumns;
 

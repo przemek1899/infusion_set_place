@@ -1,4 +1,4 @@
-package com.vcf.przemek.firstappsdk16;
+package com.vcf.przemek.firstappsdk16.constants;
 
 /**
  * Created by pteodorski on 09.02.2017.

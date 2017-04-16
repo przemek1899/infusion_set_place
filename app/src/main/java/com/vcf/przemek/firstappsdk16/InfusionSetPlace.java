@@ -11,17 +11,17 @@ public class InfusionSetPlace {
     int ID;
     private String place;
     private Date date;
-    private boolean is_working;
+    private boolean is_not_working;
 
     public InfusionSetPlace(){
 
     }
 
-    public InfusionSetPlace(int id, String place, Date date, boolean is_working){
+    public InfusionSetPlace(int id, String place, Date date, boolean is_not_working){
         this.ID = id;
         this.place = place;
         this.date = date;
-        this.is_working = is_working;
+        this.is_not_working = is_not_working;
     }
 
 
@@ -33,8 +33,8 @@ public class InfusionSetPlace {
         return place;
     }
 
-    public boolean is_working() {
-        return is_working;
+    public boolean is_not_working() {
+        return is_not_working;
     }
 
     public int getID() {
