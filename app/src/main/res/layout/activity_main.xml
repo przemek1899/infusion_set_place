@@ -11,15 +11,6 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.vcf.przemek.firstappsdk16.MainActivity">
 
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/my_toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        android:elevation="4dp"
-        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
-
     <ListView
         android:layout_width="wrap_content"
         android:layout_height="900px"
@@ -33,11 +24,11 @@
         android:layout_height="wrap_content"
         android:onClick="refreshView"
         android:id="@+id/button2"
-        android:layout_alignBaseline="@+id/button"
         android:layout_alignBottom="@+id/button"
         android:layout_toRightOf="@+id/button"
-        android:layout_marginLeft="31dp"
-        android:layout_marginStart="31dp" />
+        android:layout_marginLeft="11dp"
+        android:layout_marginStart="11dp"
+        android:layout_below="@+id/my_toolbar" />
 
     <Button
         android:text="Wyznacz"
@@ -56,6 +47,18 @@
         android:onClick="addInfusionSetDialog"
         android:id="@+id/button"
         android:layout_below="@+id/my_toolbar"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/my_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+        android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
 </RelativeLayout>

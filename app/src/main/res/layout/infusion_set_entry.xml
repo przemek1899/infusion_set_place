@@ -5,25 +5,34 @@
     android:longClickable="true">
     <TextView
         android:id="@+id/place_entry"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
+        android:layout_weight="50"
         android:layout_height="match_parent"
-        android:gravity="center"
+        android:paddingTop="5dp"
+        android:gravity="left"
         android:textSize="20dip" />
 
     <ImageView
         android:id="@+id/not_working_icon"
-        android:layout_width="40px"
-        android:layout_height="40px"
-        android:maxHeight="40px"
-        android:maxWidth="40px"
-        android:scaleType="centerInside"
+        android:layout_width="0dp"
+        android:layout_weight="10"
+        android:layout_height="match_parent"
+
+        android:adjustViewBounds="true"
+        android:maxHeight="20px"
+        android:maxWidth="20px"
+        android:padding="5dp"
+        android:scaleType="fitCenter"
         android:visibility="invisible"
+        android:gravity="left"
         android:src="@drawable/delete_cross_icon" />
 
     <TextView
         android:id="@+id/date_entry"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
+        android:layout_weight="40"
         android:layout_height="match_parent"
-        android:gravity="center"
+        android:paddingTop="5dp"
+        android:gravity="left"
         android:textSize="20dip" />
 </LinearLayout>

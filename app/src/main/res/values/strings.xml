@@ -7,4 +7,7 @@
         <item>Usuń wkłucie</item>
         <item>Oznacz jako nieudane</item>
     </string-array>
+    <string-array name="add_insulin_reservoir_choice">
+        <item>Wymiana zbiornika</item>
+    </string-array>
 </resources>

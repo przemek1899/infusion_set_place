@@ -272,20 +272,36 @@ public class MainActivity extends AppCompatActivity {
         builder.show();
     }
 
+    private boolean is_insulin_reservoir_change = false;
+
     public void addInfousionSetConfirmDialog() {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Podsumowanie");
 
+        is_insulin_reservoir_change = false;
         final Date creationDate = getSelectedDate();
         String custom_date_string = df.format(creationDate);
         builder.setMessage("Miejsce: " + selected_place + "  " + custom_date_string);
+        builder.setMultiChoiceItems(R.array.add_insulin_reservoir_choice, null,
+                new DialogInterface.OnMultiChoiceClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which,
+                                    boolean isChecked) {
+                    if (isChecked) {
+                        is_insulin_reservoir_change = true;
+                    }
+                }
+        });
         builder.setPositiveButton("Tak", new OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                // TODO
                 boolean not_working = false;
                 insertInfusionSet(selected_place, creationDate, not_working);
+                if (is_insulin_reservoir_change == true){
+                    insertInsulinReservoir(creationDate);
+                    is_insulin_reservoir_change = false;
+                }
                 initListViewWithCustomAdapter();
             }
         });
