@@ -7,6 +7,7 @@ import android.app.TimePickerDialog;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -156,6 +157,10 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.reservoir_menu:
                 showInsulinReservoirDialog();
+                return true;
+
+            case R.id.reservoir_activity:
+                switchReservoirActivity();
                 return true;
 
             default:
@@ -591,5 +596,13 @@ public class MainActivity extends AppCompatActivity {
     public void showTimePickerDialog() {
         DialogFragment newFragment = new TimePickerFragment();
         newFragment.show(getFragmentManager(), "timePicker");
+    }
+
+    public void switchReservoirActivity(){
+        Intent intent = new Intent(this, InsulinReservoirActivity.class);
+//        EditText editText = (EditText) findViewById(R.id.editText);
+//        String message = editText.getText().toString();
+//        intent.putExtra(EXTRA_MESSAGE, message);
+        startActivity(intent);
     }
 }

@@ -6,4 +6,8 @@
         android:id="@+id/reservoir_menu"
         android:title="Zbiornik"/>
 
+    <item
+        android:id="@+id/reservoir_activity"
+        android:title="Historia wymiany"/>
+
 </menu>

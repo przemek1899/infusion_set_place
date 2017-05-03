@@ -2,8 +2,7 @@
     <string name="app_name">First APP sdk16</string>
     <string name="button_add">Dodaj wkucie</string>
     <string name="long_item_dialog_title">Wybierz akcję</string>
-    <string-array
-        name="long_item_dialog_options">
+    <string-array name="long_item_dialog_options">
         <item>Usuń wkłucie</item>
         <item>Oznacz jako nieudane</item>
     </string-array>

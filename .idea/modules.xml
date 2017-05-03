@@ -4,7 +4,6 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/FirstAPPsdk16.iml" filepath="$PROJECT_DIR$/FirstAPPsdk16.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/infusion_set_place.iml" filepath="$PROJECT_DIR$/infusion_set_place.iml" />
     </modules>
   </component>
 </project>
