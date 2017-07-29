@@ -28,6 +28,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
@@ -35,6 +38,9 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.vcf.przemek.firstappsdk16.constants.DataPickerMode;
 import com.vcf.przemek.firstappsdk16.db.InfusionSetDatabase;
 import com.vcf.przemek.firstappsdk16.db.InsulinContainerReader;
+import com.vcf.przemek.firstappsdk16.objects.InfusionSetPlace;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -604,5 +610,32 @@ public class MainActivity extends AppCompatActivity {
 //        String message = editText.getText().toString();
 //        intent.putExtra(EXTRA_MESSAGE, message);
         startActivity(intent);
+    }
+
+    public void sendDataToServer(){
+        String url = "http://192.168.1.4:8000";
+
+        Map<String, String> params = new HashMap<>();
+//        params.put("grant_type", "password");
+        // TODO
+
+        CustomVolleyAuthRequest customRequest = new CustomVolleyAuthRequest(
+                Request.Method.POST, url, params, getAuthCredentials(),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        //showResponse("Response: ", response.toString());
+                        saveAuthonticationToken(response);
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError response)
+                    {
+                        showResponse("Response: Error", response.toString());
+                    }
+                }
+        );
+        RequestQueueSingleton.getInstance(this).addToRequestQueue(customRequest);
     }
 }

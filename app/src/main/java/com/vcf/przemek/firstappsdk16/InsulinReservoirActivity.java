@@ -1,9 +1,5 @@
 package com.vcf.przemek.firstappsdk16;
 
-import android.app.LoaderManager;
-import android.content.CursorLoader;
-import android.content.DialogInterface;
-import android.content.Loader;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AlertDialog;
@@ -17,8 +13,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.vcf.przemek.firstappsdk16.db.InfusionSetDatabase;
-import com.vcf.przemek.firstappsdk16.db.InfusionSetReader;
 import com.vcf.przemek.firstappsdk16.db.InsulinContainerReader;
+import com.vcf.przemek.firstappsdk16.objects.ReservoirChange;
 
 import java.util.ArrayList;
 import java.util.Date;
