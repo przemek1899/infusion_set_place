@@ -13,7 +13,7 @@ public class InfusionSetDatabase extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "INFUSION_SET_MEMORY";
     private static final int DATABASE_VERSION = 3;
 
-    private static final String INFUSION_SET_TABLE_NAME = "infusion_set";
+    public static final String INFUSION_SET_TABLE_NAME = "infusion_set";
     private static final String INFUSION_SET_TABLE_CREATE =
             "CREATE TABLE " + INFUSION_SET_TABLE_NAME + " (" +
                     InfusionSetReader.InfusionSetEntry._ID + " INTEGER PRIMARY KEY," +
@@ -21,7 +21,7 @@ public class InfusionSetDatabase extends SQLiteOpenHelper {
                     InfusionSetReader.InfusionSetEntry.COLUMN_NAME_CREATION_DATE + " INTEGER NOT NULL," +
                     InfusionSetReader.InfusionSetEntry.COLUMN_NAME_NOT_WORKING + " BOOLEAN);";
 
-    private static final String INSULIN_CONTAINER_TABLE_NAME = "insulin_container";
+    public static final String INSULIN_CONTAINER_TABLE_NAME = "insulin_container";
     private static final String INSULIN_CONTAINER_TABLE_CREATE =
             "CREATE TABLE " + INSULIN_CONTAINER_TABLE_NAME + " (" +
                     InfusionSetReader.InfusionSetEntry._ID + " INTEGER PRIMARY KEY," +

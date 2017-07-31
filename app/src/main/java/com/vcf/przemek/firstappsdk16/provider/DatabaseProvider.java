@@ -19,13 +19,16 @@ public class DatabaseProvider extends ContentProvider {
 
     private static final UriMatcher sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
     private static String MIME_PREFIX = "vnd.infusion_set.cursor.";
-    private static final String provider_package = "com.vcf.przemek.firstappsdk16.provider.DatabaseProvider";
+    private static final String provider_package = "com.vcf.przemek.firstappsdk16.provider.databaseprovider";
 
     InfusionSetDatabase dbHelper;
 
     static {
-        sUriMatcher.addURI(provider_package, "infusion_set", 1);
-        sUriMatcher.addURI(provider_package, "infusion_set/#", 2);
+        sUriMatcher.addURI(provider_package, InfusionSetDatabase.INFUSION_SET_TABLE_NAME, 1);
+        sUriMatcher.addURI(provider_package, InfusionSetDatabase.INFUSION_SET_TABLE_NAME + "/#", 2);
+
+        sUriMatcher.addURI(provider_package, InfusionSetDatabase.INSULIN_CONTAINER_TABLE_NAME, 3);
+        sUriMatcher.addURI(provider_package, InfusionSetDatabase.INSULIN_CONTAINER_TABLE_NAME + "/#", 4);
     }
 
     public boolean onCreate (){

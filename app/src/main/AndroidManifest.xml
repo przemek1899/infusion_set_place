@@ -27,6 +27,22 @@
             android:value="@integer/google_play_services_version" />
 
         <activity android:name=".InsulinReservoirActivity"></activity>
+
+        <provider
+            android:authorities="com.vcf.przemek.firstappsdk16.provider.databaseprovider"
+            android:enabled="true"
+            android:exported="true"
+            android:name="com.vcf.przemek.firstappsdk16.provider.DatabaseProvider"
+            android:grantUriPermissions="true"
+            android:initOrder="9999"
+            android:multiprocess="true"
+
+            android:permission="string"
+            android:process="string"
+            android:readPermission="string"
+            android:syncable="false"
+            android:writePermission="string" >
+        </provider>
     </application>
 
-</manifest>
+    </manifest>
