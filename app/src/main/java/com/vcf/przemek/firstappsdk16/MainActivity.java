@@ -3,11 +3,14 @@ package com.vcf.przemek.firstappsdk16;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.app.LoaderManager;
 import android.app.TimePickerDialog;
 import android.content.ContentValues;
+import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.content.Loader;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -39,6 +42,7 @@ import com.vcf.przemek.firstappsdk16.constants.DataPickerMode;
 import com.vcf.przemek.firstappsdk16.db.InfusionSetDatabase;
 import com.vcf.przemek.firstappsdk16.db.InsulinContainerReader;
 import com.vcf.przemek.firstappsdk16.objects.InfusionSetPlace;
+import com.vcf.przemek.firstappsdk16.provider.DatabaseProvider;
 
 import org.json.JSONObject;
 
@@ -55,7 +59,7 @@ import java.util.Set;
 
 import static com.vcf.przemek.firstappsdk16.db.InfusionSetReader.InfusionSetEntry;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>  {
 
     private static final Map<String, String> myMap;
     private static final Calendar calendar = Calendar.getInstance();
@@ -98,7 +102,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        initInfusionSetListView();
         initListViewWithCustomAdapter();
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -106,7 +109,31 @@ public class MainActivity extends AppCompatActivity {
 
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
+
+        // initialize a loader
+        getLoaderManager().initLoader(0, null, this);
     }
+
+    // ---------------- LOADER INTERFACE -------------------
+
+    public Loader<Cursor> onCreateLoader (int id, Bundle args){
+        Uri baseUri = DatabaseProvider.CONTENT_URI;
+
+        String [] projection = null;
+        String selection = null;
+
+        return new CursorLoader(this, baseUri, projection, selection, null, null);
+    }
+
+    public void onLoadFinished (Loader<Cursor> loader, Cursor data){
+
+    }
+
+    public void onLoaderReset (Loader<Cursor> loader){
+
+    }
+
+    // ---------------- LOADER INTERFACE -------------------
 
     public void initListViewWithCustomAdapter() {
         Cursor c = getCursorForLayout();
@@ -612,30 +639,30 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    public void sendDataToServer(){
-        String url = "http://192.168.1.4:8000";
-
-        Map<String, String> params = new HashMap<>();
-//        params.put("grant_type", "password");
-        // TODO
-
-        CustomVolleyAuthRequest customRequest = new CustomVolleyAuthRequest(
-                Request.Method.POST, url, params, getAuthCredentials(),
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        //showResponse("Response: ", response.toString());
-                        saveAuthonticationToken(response);
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError response)
-                    {
-                        showResponse("Response: Error", response.toString());
-                    }
-                }
-        );
-        RequestQueueSingleton.getInstance(this).addToRequestQueue(customRequest);
-    }
+//    public void sendDataToServer(){
+//        String url = "http://192.168.1.4:8000";
+//
+//        Map<String, String> params = new HashMap<>();
+////        params.put("grant_type", "password");
+//        // TODO
+//
+//        CustomVolleyAuthRequest customRequest = new CustomVolleyAuthRequest(
+//                Request.Method.POST, url, params, getAuthCredentials(),
+//                new Response.Listener<JSONObject>() {
+//                    @Override
+//                    public void onResponse(JSONObject response) {
+//                        //showResponse("Response: ", response.toString());
+//                        saveAuthonticationToken(response);
+//                    }
+//                },
+//                new Response.ErrorListener() {
+//                    @Override
+//                    public void onErrorResponse(VolleyError response)
+//                    {
+//                        showResponse("Response: Error", response.toString());
+//                    }
+//                }
+//        );
+//        RequestQueueSingleton.getInstance(this).addToRequestQueue(customRequest);
+//    }
 }

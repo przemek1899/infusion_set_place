@@ -36,12 +36,7 @@
             android:grantUriPermissions="true"
             android:initOrder="9999"
             android:multiprocess="true"
-
-            android:permission="string"
-            android:process="string"
-            android:readPermission="string"
-            android:syncable="false"
-            android:writePermission="string" >
+        >
         </provider>
     </application>
 
