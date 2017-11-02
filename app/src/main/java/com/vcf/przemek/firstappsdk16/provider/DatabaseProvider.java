@@ -26,6 +26,13 @@ public class DatabaseProvider extends ContentProvider {
 
     InfusionSetDatabase dbHelper;
 
+    public static final String[] INFUSION_SET_SUMMARY_PROJECTION = new String[] {
+            InfusionSetReader.InfusionSetEntry._ID,
+            InfusionSetReader.InfusionSetEntry.COLUMN_NAME_PLACE,
+            InfusionSetReader.InfusionSetEntry.COLUMN_NAME_CREATION_DATE,
+            InfusionSetReader.InfusionSetEntry.COLUMN_NAME_NOT_WORKING
+    };
+
     static {
         sUriMatcher.addURI(PROVIDER_NAME, InfusionSetDatabase.INFUSION_SET_TABLE_NAME, 1);
         sUriMatcher.addURI(PROVIDER_NAME, InfusionSetDatabase.INFUSION_SET_TABLE_NAME + "/#", 2);

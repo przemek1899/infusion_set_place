@@ -39,14 +39,18 @@ import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.vcf.przemek.firstappsdk16.constants.DataPickerMode;
+import com.vcf.przemek.firstappsdk16.custom_oauth.CustomVolleyRequestAPI;
 import com.vcf.przemek.firstappsdk16.db.InfusionSetDatabase;
 import com.vcf.przemek.firstappsdk16.db.InsulinContainerReader;
 import com.vcf.przemek.firstappsdk16.objects.InfusionSetPlace;
 import com.vcf.przemek.firstappsdk16.provider.DatabaseProvider;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -71,6 +75,9 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     private Integer selected_year = null;
     private Integer selected_hour = null;
     private Integer selected_minute = null;
+
+
+    private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("E, dd-MM HH:mm");
 
     private DataPickerMode data_picker_mode = null;
 
@@ -119,25 +126,40 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     public Loader<Cursor> onCreateLoader (int id, Bundle args){
         Uri baseUri = DatabaseProvider.CONTENT_URI;
 
-        String [] projection = null;
+        String [] projection = DatabaseProvider.INFUSION_SET_SUMMARY_PROJECTION;
         String selection = null;
 
         return new CursorLoader(this, baseUri, projection, selection, null, null);
     }
 
     public void onLoadFinished (Loader<Cursor> loader, Cursor data){
-
+        // send data to the server
+        sendDataToServer(data);
     }
 
     public void onLoaderReset (Loader<Cursor> loader){
-
+        // todo
     }
 
     // ---------------- LOADER INTERFACE -------------------
 
+    public void setChangeDate(Date last_date_change){
+        Date new_date = addDaysToDate(last_date_change, 3);
+        SimpleDateFormat sdf = new SimpleDateFormat("E, dd-MM HH:mm");
+        String dateNext = sdf.format(new_date);
+        TextView changeDateTextView = (TextView) findViewById(R.id.change_date);
+        changeDateTextView.setText("Następne wkucie:\n" + dateNext);
+    }
+
     public void initListViewWithCustomAdapter() {
         Cursor c = getCursorForLayout();
         List<InfusionSetPlace> list = mapEntriesFromDB(c);
+
+        String nextPlaceDate = getNextInfusionSetPlace(list);
+        TextView changeDateTextView = (TextView) findViewById(R.id.change_date);
+        changeDateTextView.setText("Następne wkucie:\t" + nextPlaceDate);
+//        setChangeDate(list.get(0).getDate());
+
         InfusionSetPlace[] array = list.toArray(new InfusionSetPlace[list.size()]);
         c.close();
         CustomAdapter adapter = new CustomAdapter(this, array);
@@ -398,7 +420,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         InfusionSetDatabase dbHelper = new InfusionSetDatabase(getApplicationContext());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        // Define a projection that specifies which columns from the database you will actually use after this query.
         String[] projection = {
                 InfusionSetEntry._ID,
                 InfusionSetEntry.COLUMN_NAME_PLACE,
@@ -406,11 +427,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 InfusionSetEntry.COLUMN_NAME_NOT_WORKING
         };
 
-        // Filter results WHERE "title" = 'My Title'
-//        String selection = FeedEntry.COLUMN_NAME_TITLE + " = ?";
-//        String[] selectionArgs = { "My Title" };
-
-        // How you want the results sorted in the resulting Cursor
         String sortOrder = InfusionSetEntry.COLUMN_NAME_CREATION_DATE + " DESC";
         String limit = "10";
 
@@ -431,14 +447,14 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     public void showNextInfusionSetPlace(View v){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Miejsce następnego wkłucia");
-        List<CharSequence> available_places = getNextInfusionSetPlace();
+        String available_places = getNextInfusionSetPlace();
 //        builder.setItems(available_places.toArray(), new OnClickListener() {
 //            @Override
 //            public void onClick(DialogInterface dialog, int which) {
 //                // do nothing
 //            }
 //        });
-        builder.setMessage(available_places.get(0));
+        builder.setMessage(available_places);
         builder.show();
     }
 
@@ -452,30 +468,70 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         return "No place found";
     }
 
-    public List<CharSequence> getNextInfusionSetPlace() {
+    public Date addDaysToDate(Date d, int days){
+        Calendar c = Calendar.getInstance();
+        c.setTime(d);
+        c.add(Calendar.DATE, days);
+        return c.getTime();
+//        dt = sdf.format(c.getTime());  // dt is now the new date
+    }
+
+
+    public String getNextInfusionSetPlace(List<InfusionSetPlace> list) {
+
+        String place = "";
+        String dateNext = "";
+
+        if (list == null || list.size() < 1){
+            return place + " " + dateNext;
+        }
+
+        // new date
+        Date new_date = addDaysToDate(list.get(0).getDate(), 3);
+        dateNext = simpleDateFormat.format(new_date);
 
         Set infusion_set = new HashSet<String>();
-        List<CharSequence> results = new ArrayList<CharSequence>();
+
+        for (int i=0; i<list.size(); i++){
+            infusion_set.add(list.get(i).getPlace());
+            if (infusion_set.size() >= infusion_places.length - 1){
+                return findOnePlace(infusion_set, infusion_places) + "\t" + dateNext;
+            }
+        }
+
+        return place + " " + dateNext;
+    }
+
+    public String getNextInfusionSetPlace() {
+
+        Set infusion_set = new HashSet<String>();
 
         Cursor c = getCursorForLastInfusionSet();
+        boolean first = true;
+        String dateNext = "";
 
         if (c != null) {
             if (c.moveToFirst()) {
                 do {
                     String place = c.getString(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_PLACE));
+                    if (first) {
+                        long longTime = c.getLong(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_CREATION_DATE));
+                        Date date = new Date(longTime);
+                        date = addDaysToDate(date, 3);
+                        SimpleDateFormat sdf = new SimpleDateFormat("E, dd-MM HH:mm");
+                        dateNext = sdf.format(date);
+                    }
                     String not_working_str = c.getString(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_NOT_WORKING));
                     infusion_set.add(place);
                     if (infusion_set.size() >= infusion_places.length - 1){
-                        results.add(findOnePlace(infusion_set, infusion_places));
-                        return results;
+                        return findOnePlace(infusion_set, infusion_places) + "\t" + dateNext;
                     }
+                    first = false;
                 } while (c.moveToNext());
             }
         }
         c.close();
-        // TODO
-        results.add("Nothing");
-        return results;
+        return "Nothing";
     }
 
     public List<InfusionSetPlace> mapEntriesFromDB(Cursor c) {
@@ -487,11 +543,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                     Integer not_working_int = c.getInt(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_NOT_WORKING));
 
                     long longTime = c.getLong(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_CREATION_DATE));
-                    Date date = new Date(longTime);
 
                     int id = c.getInt(c.getColumnIndex(InfusionSetEntry._ID));
                     boolean not_working = not_working_int.intValue() == 1;
-                    list.add(new InfusionSetPlace(id, place, date, not_working));
+                    list.add(new InfusionSetPlace(id, place, longTime, not_working));
                 } while (c.moveToNext());
             }
         }
@@ -639,30 +694,51 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         startActivity(intent);
     }
 
-//    public void sendDataToServer(){
-//        String url = "http://192.168.1.4:8000";
-//
-//        Map<String, String> params = new HashMap<>();
-////        params.put("grant_type", "password");
-//        // TODO
-//
-//        CustomVolleyAuthRequest customRequest = new CustomVolleyAuthRequest(
-//                Request.Method.POST, url, params, getAuthCredentials(),
-//                new Response.Listener<JSONObject>() {
-//                    @Override
-//                    public void onResponse(JSONObject response) {
-//                        //showResponse("Response: ", response.toString());
-//                        saveAuthonticationToken(response);
-//                    }
-//                },
-//                new Response.ErrorListener() {
-//                    @Override
-//                    public void onErrorResponse(VolleyError response)
-//                    {
-//                        showResponse("Response: Error", response.toString());
-//                    }
-//                }
-//        );
-//        RequestQueueSingleton.getInstance(this).addToRequestQueue(customRequest);
-//    }
+    private JSONArray wrapCursorData(Cursor c){
+        JSONArray jsonArray = new JSONArray();
+        if (c != null) {
+            if (c.moveToFirst()) {
+                do {
+                    String place = c.getString(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_PLACE));
+                    Integer not_working_int = c.getInt(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_NOT_WORKING));
+
+                    long longTime = c.getLong(c.getColumnIndex(InfusionSetEntry.COLUMN_NAME_CREATION_DATE));
+
+                    int id = c.getInt(c.getColumnIndex(InfusionSetEntry._ID));
+                    boolean not_working = not_working_int.intValue() == 1;
+
+                    jsonArray.put(InfusionSetPlace.toJson(id, place, longTime, not_working));
+                } while (c.moveToNext());
+            }
+        }
+        return jsonArray;
+    }
+
+    public void sendDataToServer(Cursor cursor_data){
+        String url = "http://192.168.1.4:8000/api/test/";
+        JSONArray jsonArray = wrapCursorData(cursor_data);
+
+        Map<String, String> params = new HashMap<>();
+        params.put("infusion_set", jsonArray.toString());
+
+        CustomVolleyRequestAPI customRequest = new CustomVolleyRequestAPI(
+                Request.Method.POST, url, params,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        //showResponse("Response: ", response.toString());
+                       // todo
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError response)
+                    {
+                       // todo
+                        // howResponse("Response: Error", response.toString());
+                    }
+                }
+        );
+        RequestQueueSingleton.getInstance(this).addToRequestQueue(customRequest);
+    }
 }
